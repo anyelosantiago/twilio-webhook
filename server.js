@@ -11,9 +11,42 @@ const inbox = Object.create(null);
 // Extrae el primer código de 6 dígitos del SMS
 function extractCode(text) {
   if (!text) return null;
-  const m = text.match(/\b\d{6}\b/);
-  return m ? m[0] : null;
+
+  const t = text.trim();
+
+  // 1) Formato típico de Google: "G-123456"
+  let m = t.match(/\bG\s*-\s*(\d{6})\b/i);
+  if (m) return m[1];
+
+  // 2) "Google ... 123456" (Google verification code...)
+  m = t.match(/\bgoogle[^0-9]{0,40}(\d{6})\b/i);
+  if (m) return m[1];
+
+  // 3) "Google Voice/Gmail/YouTube ... 123456"
+  m = t.match(/\b(google\s*voice|gmail|youtube|yt)[^0-9]{0,40}(\d{6})\b/i);
+  if (m) return m[2];
+
+  // 4) "Use/Your/Tu/Su ... 123456"
+  m = t.match(/\b(?:use|your|tu|su)[^0-9]{0,20}(\d{6})\b/i);
+  if (m) return m[1];
+
+  // Evitar teléfonos largos (7+ dígitos)
+  const noPhones = t.replace(/\d{7,}/g, " ");
+
+  // 5) Códigos con separadores: "12 34 56", "12-34-56", "123 456"
+  let sep = noPhones.match(/(?<!\d)(?:\d[ \-\.]?){6}(?!\d)/);
+  if (sep) {
+    const onlyDigits = sep[0].replace(/\D+/g, "");
+    if (onlyDigits.length === 6) return onlyDigits;
+  }
+
+  // 6) Fallback: 6 dígitos sueltos
+  m = noPhones.match(/\b(\d{6})\b/);
+  if (m) return m[1];
+
+  return null;
 }
+
 
 // Webhook para SMS entrante
 app.post("/sms-webhook", (req, res) => {
