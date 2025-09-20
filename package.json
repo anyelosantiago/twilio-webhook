@@ -1,11 +1,13 @@
 {
   "name": "twilio-webhook",
   "version": "1.0.0",
+  "description": "Servidor Express para recibir SMS de Twilio, extraer códigos y exponerlos vía API. Desplegado en Railway.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "twilio": "^4.22.0"
   }
 }
